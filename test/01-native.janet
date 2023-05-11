@@ -40,3 +40,11 @@
   (set ran? true)
   (assert (keyword? k)))
 (assert ran? "failed to iterate over tm")
+
+# test timezone detection
+# ... except when dst is on locally, it's not worth it, do not look into this
+(when (false? (ld :isdst))
+  (def ld2 (merge gd {:min (+ (gd :min) (native/tzoffset))}))
+  (def lm2 (native/dict->tm ld2))
+  (:normalize lm2)
+  (assert (= lm2 local)))

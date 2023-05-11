@@ -90,7 +90,7 @@ static int jtm_get(void *p, Janet key, Janet *out) {
 	if (janet_keyeq(key, "isdst")) {
 		if(tm->tm_isdst == 0) {
 			*out = janet_wrap_false();
-		} else if (tm->tm_isdst > 1) {
+		} else if (tm->tm_isdst > 0) {
 			*out = janet_wrap_true();
 		} else {
 			*out = janet_ckeywordv("detect");
@@ -101,10 +101,9 @@ static int jtm_get(void *p, Janet key, Janet *out) {
 }
 #undef JDATE_KEYEQ
 
-static /*inline*/ int compare_time_t(time_t lhs, time_t rhs) {
-	// time_t is either arithmetic (we could lhs - rhs)
-	// or real (we can't do that since we return an int)
-	return lhs < rhs ? -1 : (lhs > rhs ? 1 : 0);
+static inline int compare_time_t(time_t lhs, time_t rhs) {
+	// difftime returns the difference in seconds
+	return difftime(lhs, rhs);
 }
 
 static int jtime_compare(void *lhs, void *rhs) {
@@ -258,12 +257,14 @@ struct strftime_format {
 	const char* format;
 };
 const static struct strftime_format builtin_formats[] = {
-	{"iso8601", "%F %T.000"},
-	{"locale",  "%c"},
+	{"iso8601",  "%F %T.000"},
+	{"locale",   "%c"},
 	// WARN: will not work as you expect if it came from gmtime
-	{"rfc5322", "%a, %d %b %Y %T %z"},
+	{"rfc5322",  "%a, %d %b %Y %T %z"},
 	// variant of rfc5322 that is compatible with gmtime and only gmtime
-	{"email",   "%d %b %Y %T -0000"},
+	{"email",    "%d %b %Y %T -0000"},
+	{"timezone", "%Z"},
+	{"tzoffset", "%z"},
 	{NULL, NULL}
 };
 
@@ -357,12 +358,44 @@ JANET_FN(jtmdict,
 	janet_table_put(out, janet_ckeywordv("yday"), janet_wrap_integer(tm->tm_yday));
 	if(tm->tm_isdst == 0) {
 		janet_table_put(out, janet_ckeywordv("isdst"), janet_wrap_false());
-	} else if (tm->tm_isdst > 1) {
+	} else if (tm->tm_isdst > 0) {
 		janet_table_put(out, janet_ckeywordv("isdst"), janet_wrap_true());
 	} else {
 		janet_table_put(out, janet_ckeywordv("isdst"), janet_ckeywordv("detect"));
 	}
 	return janet_wrap_table(out);
+}
+
+JANET_FN(jgettzoffset,
+		"",
+		"") {
+	janet_fixarity(argc, 0);
+	time_t *t = janet_smalloc(sizeof(time_t));
+	time(t);
+	struct tm *tm = localtime(t);
+	// ISO 8601 format is -/+NNNN : 5 characters + 1 for \0
+	// 8 is nice and 2^n aligned, closest over 6
+	char buf[8];
+	strftime(buf, 8, "%z", tm);
+	// manual parsing for fun
+	// the offset will be in minutes
+	int offset = 0;
+	offset +=  buf[4] - '0';
+	offset += (buf[3] - '0') * 10;
+	offset += (buf[2] - '0') * 60;
+	offset += (buf[1] - '0') * 60 * 10;
+	if (buf[0] == '-') offset *= -1;
+	return janet_wrap_integer(offset);
+}
+
+JANET_FN(jgettz,
+		"",
+		"") {
+	janet_fixarity(argc, 0);
+	time_t *t = janet_smalloc(sizeof(time_t));
+	time(t);
+	struct tm *tm = localtime(t);
+	return janet_wrap_buffer(strftime_buffer("%Z", tm, NULL));
 }
 
 static const JanetRegExt cfuns[] = {
@@ -375,6 +408,8 @@ static const JanetRegExt cfuns[] = {
 	JANET_REG("tm->dict",   jtmdict),
 	JANET_REG("dict->tm",   jnewtm),
 	JANET_REG("dict->time", jnewtime),
+	JANET_REG("tz",         jgettz),
+	JANET_REG("tzoffset",   jgettzoffset),
 	JANET_REG_END,
 };
 
