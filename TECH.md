@@ -16,3 +16,11 @@ The implication (which is accurate) implies that `gmtime(t) == gmtime(mktime(loc
 
 As such, the source of truth is `time_t`, which is UTC-only.
 When we want to modify a `time_t`, we want to use localtime to perform the modification.
+
+`strftime` actually can handle a `gmtime`, but various platforms are buggy.
+For example, macOS `%z %Z` will correctly report UTC but will report the localtime offset.
+On Linux, the same format will correctly report an offset of exactly `+0000`, but claim to be in `GMT`.
+As such, `%z` and `%Z` cannot be counted on.
+
+Ok, `%z` and `%Z` don't work correctly because `struct tm` is often extended.
+When I convert to and from a dictionary, I lose that information.
