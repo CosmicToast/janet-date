@@ -6,7 +6,6 @@
 static JanetMethod jd_time_methods[] = {
 	{"gmtime",    jd_gmtime},
 	{"localtime", jd_localtime},
-	{"todict",    jd_dict_time},
 	{NULL, NULL},
 };
 
@@ -25,8 +24,9 @@ static int jd_time_get(void *p, Janet key, Janet *out) {
 }
 
 // time_t is always a UTC-representation
+// we hard-code the offset because of a macOS bug
 static void jd_time_tostring(void *p, JanetBuffer *buffer) {
-	strftime_buffer("%F %T.000 UTC", localtime(p), buffer);
+	strftime_buffer("%F %T.000 +0000", gmtime(p), buffer);
 }
 
 static const JanetAbstractType jd_time_t = {
@@ -48,15 +48,6 @@ time_t *jd_gettime(Janet *argv, int32_t n) {
 
 time_t *jd_maketime(void) {
 	return janet_abstract(&jd_time_t, sizeof(time_t));
-}
-
-JANET_FN(jd_dict_time,
-		"(dict->time {...})",
-		"") {
-	janet_fixarity(argc, 1);
-	JanetDictView dict = janet_getdictionary(argv, 0);
-	struct tm *tm = jd_tm_from_dict(dict);
-	return janet_wrap_abstract(tm);
 }
 
 JANET_FN(jd_gmtime,
@@ -92,7 +83,6 @@ JANET_FN(jd_time,
 }
 
 const JanetRegExt jd_time_cfuns[] = {
-	JANET_REG("dict->time", jd_dict_time),
 	JANET_REG("gmtime",     jd_gmtime),
 	JANET_REG("localtime",  jd_localtime),
 	JANET_REG("time",       jd_time),

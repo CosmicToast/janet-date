@@ -8,7 +8,6 @@ static JanetMethod jd_tm_methods[] = {
 	{"mktime!",   jd_mktime_inplace},
 	{"normalize", jd_mktime_inplace},
 	{"strftime",  jd_strftime},
-	{"todict",    jd_tm_dict},
 	{NULL, NULL},
 };
 
@@ -20,6 +19,24 @@ static int jd_tm_compare(void *lhs, void *rhs) {
 	return difftime(lhv, rhv);
 }
 
+// C99 specifies ALL fields to be int
+struct jd_tm_key {
+	const char  *key;
+	const size_t off;
+};
+static const struct jd_tm_key jd_tm_keys[] = {
+	{"sec",   offsetof(struct tm, tm_sec)},
+	{"min",   offsetof(struct tm, tm_min)},
+	{"hour",  offsetof(struct tm, tm_hour)},
+	{"mday",  offsetof(struct tm, tm_mday)},
+	{"mon",   offsetof(struct tm, tm_mon)},
+	{"year",  offsetof(struct tm, tm_year)},
+	{"wday",  offsetof(struct tm, tm_wday)},
+	{"yday",  offsetof(struct tm, tm_yday)},
+	{"isdst", offsetof(struct tm, tm_isdst)},
+	{NULL, 0},
+};
+
 static int jd_tm_get(void *p, Janet key, Janet *out) {
 	if (!janet_checktype(key, JANET_KEYWORD)) {
 		return 0;
@@ -30,32 +47,89 @@ static int jd_tm_get(void *p, Janet key, Janet *out) {
 		return 1;
 	}
 
-	// piggyback off jd_tm_to_table
-	JanetTable *tb = jd_tm_to_table(p);
-	*out = janet_table_rawget(tb, key);
+	const struct jd_tm_key *ptr = jd_tm_keys;
+	while (ptr->key) {
+		if (janet_keyeq(key, ptr->key)) {
+			int val = *((int*)(p + ptr->off));
 
-	return janet_checktype(*out, JANET_NIL);
-}
+			// exceptional values
+			if (janet_keyeq(key, "year")) {
+				val += 1900;
+			} else if (janet_keyeq(key, "isdst")) {
+				*out = val ? (val > 0 ? janet_wrap_true() : janet_ckeywordv("detect")) : janet_wrap_false();
+				return 1;
+			}
 
-static const char* jd_tm_keys[] = {
-	"sec", "min", "hour", "mday", "mon", "year", "wday", "yday", NULL,
-};
-static Janet jd_tm_next(void *p, Janet key) {
-	(void) p;
-	const char **ptr = jd_tm_keys;
-	while (*ptr) {
-		if (janet_keyeq(key, *ptr)) {
-			return *(++ptr) ? janet_ckeywordv(*ptr) : janet_wrap_nil();
+			*out = janet_wrap_integer(val);
+			return 1;
 		}
 		ptr++;
 	}
-	return janet_ckeywordv(jd_tm_keys[0]);
+
+	return janet_checktype(*out, JANET_NIL);
+}
+static Janet jd_tm_next(void *p, Janet key) {
+	(void) p;
+	const struct jd_tm_key *ptr = jd_tm_keys;
+	while (ptr->key) {
+		if (janet_keyeq(key, ptr->key)) {
+			return (++ptr)->key ? janet_ckeywordv(ptr->key) : janet_wrap_nil();
+		}
+		ptr++;
+	}
+	return janet_ckeywordv(jd_tm_keys[0].key);
 }
 
-// struct tm can represent non-UTC
-// it does not keep TZ information so we can't display it without potentially lying
+static void jd_tm_put(void *data, Janet key, Janet value) {
+	// note that keyword, boolean are only valid for isdst
+	if (!janet_checktypes(value, JANET_TFLAG_NUMBER | JANET_TFLAG_KEYWORD | JANET_TFLAG_BOOLEAN)) {
+		janet_panicf("expected function or number, got %t", value);
+	}
+	const struct jd_tm_key *ptr = jd_tm_keys;
+	while (ptr->key) {
+		if (janet_keyeq(key, ptr->key)) {
+			int *loc = (int*)(data + ptr->off);
+			if (janet_keyeq(key, "year")) {
+				*loc = janet_unwrap_integer(value) - 1900;
+			} else if (janet_keyeq(key, "isdst")) {
+				*loc = janet_keyeq(value, "detect") ? -1 : (janet_truthy(value) ? 1 : 0);
+			} else {
+				*loc = janet_unwrap_integer(value);
+			}
+			return;
+		}
+		ptr++;
+	}
+
+	janet_panicf("tried to write to invalid field: %v", key);
+}
+
+#define MAX_INT_STRLEN 1024
 static void jd_tm_tostring(void *p, JanetBuffer *buffer) {
-	strftime_buffer("%F %T.000", p, buffer);
+	janet_buffer_push_cstring(buffer, "{");
+	char buf[MAX_INT_STRLEN];
+
+	const struct jd_tm_key *ptr = jd_tm_keys;
+	while (ptr->key) {
+		int *loc = (int*)(p + ptr->off);
+		janet_buffer_push_cstring(buffer, ":");
+		janet_buffer_push_cstring(buffer, ptr->key);
+		janet_buffer_push_cstring(buffer, " ");
+
+		// exceptional values
+		if (!strcmp(ptr->key, "year")) {
+			snprintf(buf, MAX_INT_STRLEN, "%d", *loc + 1900);
+		} else if (!strcmp(ptr->key, "isdst")) {
+			strcpy(buf, *loc ? (*loc > 0 ? "true" : ":detect") : "false");
+		} else {
+			snprintf(buf, MAX_INT_STRLEN, "%d", *loc);
+		}
+		janet_buffer_push_cstring(buffer, buf);
+
+		if ((++ptr)->key) janet_buffer_push_cstring(buffer, " ");
+	}
+
+	janet_buffer_push_cstring(buffer, "}");
 }
 
 static const JanetAbstractType jd_tm_t = {
@@ -63,7 +137,7 @@ static const JanetAbstractType jd_tm_t = {
 	NULL,
 	NULL,
 	jd_tm_get,
-	NULL,
+	jd_tm_put,
 	NULL,
 	NULL,
 	jd_tm_tostring,
@@ -79,14 +153,6 @@ struct tm *jd_gettm(Janet *argv, int32_t n) {
 
 struct tm *jd_maketm(void) {
 	return janet_abstract(&jd_tm_t, sizeof(struct tm));
-}
-
-JANET_FN(jd_dict_tm,
-		"",
-		"") {
-	janet_fixarity(argc, 1);
-	JanetDictView dict = janet_getdictionary(argv, 0);
-	return janet_wrap_abstract(jd_tm_from_dict(dict));
 }
 
 JANET_FN(jd_mktime,
@@ -109,14 +175,6 @@ JANET_FN(jd_mktime_inplace,
 	time_t *time = jd_maketime();
 	*time = mktime(tm);
 	return janet_wrap_abstract(time);
-}
-
-JANET_FN(jd_tm_dict,
-		"",
-		"") {
-	janet_fixarity(argc, 1);
-	struct tm *tm = jd_gettm(argv, 0);
-	return janet_wrap_table(jd_tm_to_table(tm));
 }
 
 // strftime
@@ -155,10 +213,8 @@ JANET_FN(jd_strftime,
 }
 
 const JanetRegExt jd_tm_cfuns[] = {
-	JANET_REG("dict->tm", jd_dict_tm),
 	JANET_REG("mktime",   jd_mktime),
 	JANET_REG("mktime!",  jd_mktime_inplace),
 	JANET_REG("strftime", jd_strftime),
-	JANET_REG("tm->dict", jd_tm_dict),
 	JANET_REG_END
 };
