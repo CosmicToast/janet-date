@@ -26,7 +26,7 @@ struct tm *jd_tm_from_dict(JanetDictView dict) {
 	tm_set_dict(dict, "mday", &tm->tm_mday);
 	tm_set_dict(dict, "mon",  &tm->tm_mon);
 	Janet year = janet_dictionary_get(dict.kvs, dict.cap, janet_ckeywordv("year"));
-	tm->tm_year = janet_checktype(year, JANET_NUMBER) ? janet_unwrap_integer(year) + 1900 : 1900;
+	tm->tm_year = janet_checktype(year, JANET_NUMBER) ? janet_unwrap_integer(year) - 1900 : 0;
 	tm_set_dict(dict, "wday", &tm->tm_wday);
 	tm_set_dict(dict, "yday", &tm->tm_yday);
 	Janet isdst = janet_dictionary_get(dict.kvs, dict.cap, janet_ckeywordv("isdst"));
