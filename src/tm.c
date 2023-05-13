@@ -40,6 +40,12 @@ static const struct jd_tm_key jd_tm_keys[] = {
 	{"wday",  offsetof(struct tm, tm_wday)},
 	{"yday",  offsetof(struct tm, tm_yday)},
 	{"isdst", offsetof(struct tm, tm_isdst)},
+#ifdef TM_GMTOFF
+	{"gmtoff", offsetof(struct tm, TM_GMTOFF)},
+#endif
+#ifdef TM_ZONE
+	{"zone", offsetof(struct tm, TM_ZONE)},
+#endif
 	{NULL, 0},
 };
 
@@ -56,6 +62,21 @@ static int jd_tm_get(void *p, Janet key, Janet *out) {
 	const struct jd_tm_key *ptr = jd_tm_keys;
 	while (ptr->key) {
 		if (janet_keyeq(key, ptr->key)) {
+#ifdef TM_GMTOFF
+			if (janet_keyeq(key, "gmtoff")) {
+				long val = *((long*)(p + ptr->off));
+				*out = janet_wrap_s64(val);
+				return 1;
+			}
+#endif
+#ifdef TM_ZONE
+			if (janet_keyeq(key, "zone")) {
+				const char *val = *((const char **)(p + ptr->off));
+				*out = janet_ckeywordv(val);
+				return 1;
+			}
+#endif
+
 			int val = *((int*)(p + ptr->off));
 
 			// exceptional values
@@ -87,6 +108,16 @@ static Janet jd_tm_next(void *p, Janet key) {
 }
 
 static void jd_tm_put(void *data, Janet key, Janet value) {
+	if (0
+#ifdef TM_GMTOFF
+		|| janet_keyeq(key, "gmtoff")
+#endif
+#ifdef TM_ZONE
+		|| janet_keyeq(key, "zone")
+#endif
+	   ) {
+		janet_panicf("%s is read-only", key);
+	}
 	// note that keyword, boolean are only valid for isdst
 	if (!janet_checktypes(value, JANET_TFLAG_NUMBER | JANET_TFLAG_KEYWORD | JANET_TFLAG_BOOLEAN)) {
 		janet_panicf("expected function or number, got %t", value);
@@ -117,18 +148,26 @@ static void jd_tm_tostring(void *p, JanetBuffer *buffer) {
 
 	const struct jd_tm_key *ptr = jd_tm_keys;
 	while (ptr->key) {
-		int *loc = (int*)(p + ptr->off);
+		void *loc = (void*)(p + ptr->off);
 		janet_buffer_push_cstring(buffer, ":");
 		janet_buffer_push_cstring(buffer, ptr->key);
 		janet_buffer_push_cstring(buffer, " ");
 
 		// exceptional values
 		if (!strcmp(ptr->key, "year")) {
-			snprintf(buf, MAX_INT_STRLEN, "%d", *loc + 1900);
+			snprintf(buf, MAX_INT_STRLEN, "%d", *(int*)loc + 1900);
 		} else if (!strcmp(ptr->key, "isdst")) {
-			strcpy(buf, *loc ? (*loc > 0 ? "true" : ":detect") : "false");
+			strcpy(buf, *(int*)loc ? (*(int*)loc > 0 ? "true" : ":detect") : "false");
+#ifdef TM_ZONE
+		} else if (!strcmp(ptr->key, "zone")) {
+			strcpy(buf, *(char**)loc);
+#endif
+#ifdef TM_GMTOFF
+		} else if (!strcmp(ptr->key, "gmtoff")) {
+			snprintf(buf, MAX_INT_STRLEN, "%ld", *(long*)loc);
+#endif
 		} else {
-			snprintf(buf, MAX_INT_STRLEN, "%d", *loc);
+			snprintf(buf, MAX_INT_STRLEN, "%d", *(int*)loc);
 		}
 		janet_buffer_push_cstring(buffer, buf);
 
