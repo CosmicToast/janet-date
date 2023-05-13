@@ -24,3 +24,5 @@ As such, `%z` and `%Z` cannot be counted on.
 
 Ok, `%z` and `%Z` don't work correctly because `struct tm` is often extended.
 When I convert to and from a dictionary, I lose that information.
+
+Ok I've confirmed that MacOS has bugs in the libc and have now reported them.
