@@ -10,7 +10,6 @@
 
 (declare-native
   :name "date/native"
-  :headers ["src/polyfill.h" "src/date.h"]
   :source ["src/main.c"
            "src/polyfill.c"
            "src/time.c"
