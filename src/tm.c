@@ -160,7 +160,13 @@ static void jd_tm_tostring(void *p, JanetBuffer *buffer) {
 			strcpy(buf, *(int*)loc ? (*(int*)loc > 0 ? "true" : ":detect") : "false");
 #ifdef TM_ZONE
 		} else if (!strcmp(ptr->key, "zone")) {
-			strcpy(buf, *(char**)loc);
+			char *zone = *(char**)loc;
+			if (zone) {
+				buf[0] = ':';
+				strcpy(buf+1, zone);
+			} else {
+				strcpy(buf, "\"\"");
+			}
 #endif
 #ifdef TM_GMTOFF
 		} else if (!strcmp(ptr->key, "gmtoff")) {
@@ -205,6 +211,50 @@ struct tm *jd_opttm(Janet *argv, int32_t argc, int32_t n) {
 		return NULL;
 	}
 	return jd_gettm(argv, n);
+}
+
+JANET_FN(jd_tm,
+		"",
+		"") {
+	janet_fixarity(argc, 1);
+	JanetDictView view = janet_getdictionary(argv, 0);
+
+	struct tm *out = jd_maketm();
+	memset(out, 0, sizeof(struct tm));
+#ifdef TM_GMTOFF
+	out->tm_gmtoff = 0;
+#endif
+
+	for (int32_t i = 0; i < view.cap; i++) {
+		const JanetKV e = view.kvs[i];
+		if (!janet_truthy(e.key)) continue;
+		const struct jd_tm_key *ptr = jd_tm_keys;
+		while (ptr->key) {
+			if (janet_keyeq(e.key, ptr->key)) {
+				int *target  = (int*)((void*)out + ptr->off);
+
+				// exceptional values
+				if (!strcmp(ptr->key, "year")) {
+					*target = janet_unwrap_integer(e.value) - 1900;
+#ifdef TM_ZONE
+				} else if (!strcmp(ptr->key, "zone")) {
+					janet_panic("cannot set zone name");
+#endif
+#ifdef TM_GMTOFF
+				} else if (!strcmp(ptr->key, "gmtoff")) {
+					janet_panic("cannot set gmt offset");
+#endif
+				} else if (!strcmp(ptr->key, "isdst")) {
+					*target = janet_keyeq(e.value, "detect") ? -1 : (janet_truthy(e.value) ? 1 : 0);
+				} else {
+					*target = janet_unwrap_integer(e.value);
+				}
+				break;
+			}
+			ptr++;
+		}
+	}
+	return janet_wrap_abstract(out);
 }
 
 JANET_FN(jd_mktime,
@@ -319,6 +369,7 @@ JANET_FN(jd_strftime,
 }
 
 const JanetRegExt jd_tm_cfuns[] = {
+	JANET_REG("tm",       jd_tm),
 	JANET_REG("mktime",   jd_mktime),
 	JANET_REG("mktime!",  jd_mktime_inplace),
 	JANET_REG("strftime", jd_strftime),
