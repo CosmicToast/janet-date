@@ -26,3 +26,12 @@ Ok, `%z` and `%Z` don't work correctly because `struct tm` is often extended.
 When I convert to and from a dictionary, I lose that information.
 
 Ok I've confirmed that MacOS has bugs in the libc and have now reported them.
+
+I've pulled in eggert tz. This helps a lot, but some details are still unfortunate (due to the spec).
+The spec specifies quite explicitly that mktime operates on localtime output, which means I'll most
+likely have to wrap all time_t manipulations in a localtime.
+Let's start with the native api, and then the janet wrapper will purely speak time_t, I think?
+I technically also have automatic "free" access to non-ISOC99 things, since they're simply
+there to be used. However, I'd need to find a way to expose some libtz internals (as they can
+redefine time_t, define timezone_t, etc) to get that working.
+As such, I don't think I'll be doing that.
