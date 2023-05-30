@@ -11,6 +11,7 @@ static JanetMethod jd_tm_methods[] = {
 	{NULL, NULL},
 };
 
+// WARNING: this only works if they're BOTH localtime or gmtime
 static int jd_tm_compare(void *lhs, void *rhs) {
 	struct tm lhp = (*(struct tm*)lhs);
 	struct tm rhp = (*(struct tm*)rhs);
