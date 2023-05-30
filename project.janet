@@ -14,4 +14,9 @@
            "src/polyfill.c"
            "src/time.c"
            "src/tm.c"
-           "src/util.c"])
+           "src/util.c"
+
+           "tz/localtime.c"
+           "tz/asctime.c"
+           "tz/difftime.c"
+           "tz/strftime.c"])
