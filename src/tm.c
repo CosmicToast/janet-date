@@ -280,6 +280,11 @@ struct strftime_format {
 	const char *format;
 };
 const static struct strftime_format strftime_formats[] = {
+	// ISO 8601 allows for a lot
+	// we represent it as YYYY-MM-DD hh:mm:ss[+/- offset]
+	// the main unfortunate bit is the use of +/-0000 over Z
+	{"iso8601", "%F %T%z"},
+	{"default", "%c"}, // system/locale format
 	{NULL, NULL},
 };
 JANET_FN(jd_strftime,
