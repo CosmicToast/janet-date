@@ -63,7 +63,7 @@ JANET_FN(jd_gmtime,
 
 JANET_FN(jd_localtime,
 		"(localtime (time))",
-		"WARNING: do not use this unless it's for final display.") {
+		"") {
 	janet_fixarity(argc, 1);
 	time_t *time   = jd_gettime(argv, 0);
 	struct tm *tm  = localtime(time);
