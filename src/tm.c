@@ -178,7 +178,7 @@ static void jd_tm_tostring(void *p, JanetBuffer *buffer) {
 }
 
 static const JanetAbstractType jd_tm_t = {
-	"tm",
+	"date/tm",
 	NULL,
 	NULL,
 	jd_tm_get,

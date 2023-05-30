@@ -30,7 +30,7 @@ static void jd_time_tostring(void *p, JanetBuffer *buffer) {
 }
 
 static const JanetAbstractType jd_time_t = {
-	"time",
+	"date/time",
 	NULL,
 	NULL,
 	jd_time_get,
