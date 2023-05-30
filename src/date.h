@@ -21,8 +21,4 @@ struct tm *jd_opttm(Janet *argv, int32_t argc, int32_t n);
 struct tm *jd_maketm(void);
 JANET_CFUN(jd_mktime);
 JANET_CFUN(jd_mktime_inplace);
-JANET_CFUN(jd_time_localtime);
-JANET_CFUN(jd_time_localtime_inplace);
-JANET_CFUN(jd_time_utc);
-JANET_CFUN(jd_time_utc_inplace);
 JANET_CFUN(jd_strftime);

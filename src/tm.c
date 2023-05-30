@@ -7,12 +7,6 @@ static JanetMethod jd_tm_methods[] = {
 	// raw mktime, returning time_t
 	{"mktime",     jd_mktime},
 	{"mktime!",    jd_mktime_inplace},
-	// shortcut for localtime(mktime)
-	{"localtime",  jd_time_localtime},
-	{"localtime!", jd_time_localtime_inplace},
-	// shortcut for gmtime(mktime)
-	{"utc",        jd_time_utc},
-	{"utc!",       jd_time_utc_inplace},
 	{"strftime",   jd_strftime},
 	{NULL, NULL},
 };
@@ -277,60 +271,6 @@ JANET_FN(jd_mktime_inplace,
 	time_t *time = jd_maketime();
 	*time = mktime(tm);
 	return janet_wrap_abstract(time);
-}
-
-JANET_FN(jd_time_utc,
-		"",
-		"") {
-	janet_arity(argc, 0, 1);
-	struct tm *tm = jd_opttm(argv, argc, 0);
-	struct tm *nw = jd_maketm();
-	time_t t;
-	if (tm) {
-		*nw = *tm;
-		t = mktime(nw);
-	} else {
-		t = time(NULL);
-	}
-	*nw = *(gmtime(&t));
-	return janet_wrap_abstract(nw);
-}
-
-JANET_FN(jd_time_utc_inplace,
-		"",
-		"") {
-	janet_fixarity(argc, 1);
-	struct tm *tm = jd_gettm(argv, 0);
-	time_t t = mktime(tm);
-	*tm = *(gmtime(&t));
-	return janet_wrap_abstract(tm);
-}
-
-JANET_FN(jd_time_localtime,
-		"",
-		"") {
-	janet_arity(argc, 0, 1);
-	struct tm *tm = jd_opttm(argv, argc, 0);
-	struct tm *nw = jd_maketm();
-	time_t t;
-	if (tm) {
-		*nw = *tm;
-		t = mktime(nw);
-	} else {
-		t = time(NULL);
-	}
-	*nw = *(localtime(&t));
-	return janet_wrap_abstract(nw);
-}
-
-JANET_FN(jd_time_localtime_inplace,
-		"",
-		"") {
-	janet_fixarity(argc, 1);
-	struct tm *tm = jd_gettm(argv, 0);
-	time_t t = mktime(tm);
-	*tm = *(localtime(&t));
-	return janet_wrap_abstract(tm);
 }
 
 // strftime
