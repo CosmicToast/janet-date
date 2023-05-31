@@ -72,7 +72,7 @@ static int jd_tm_get(void *p, Janet key, Janet *out) {
 			}
 #endif
 
-			int val = *((int*)(p + ptr->off));
+			int val = *((int*)((unsigned char*)p + ptr->off));
 
 			// exceptional values
 			if (janet_keyeq(key, "year")) {
@@ -120,7 +120,7 @@ static void jd_tm_put(void *data, Janet key, Janet value) {
 	const struct jd_tm_key *ptr = jd_tm_keys;
 	while (ptr->key) {
 		if (janet_keyeq(key, ptr->key)) {
-			int *loc = (int*)(data + ptr->off);
+			int *loc = (int*)((unsigned char*)data + ptr->off);
 			if (janet_keyeq(key, "year")) {
 				*loc = janet_unwrap_integer(value) - 1900;
 			} else if (janet_keyeq(key, "isdst")) {
@@ -147,7 +147,7 @@ static void jd_tm_tostring(void *p, JanetBuffer *buffer) {
 
 	const struct jd_tm_key *ptr = jd_tm_keys;
 	while (ptr->key) {
-		void *loc = (void*)(p + ptr->off);
+		void *loc = (void*)((unsigned char*)p + ptr->off);
 		janet_buffer_push_cstring(buffer, ":");
 		janet_buffer_push_cstring(buffer, ptr->key);
 		janet_buffer_push_cstring(buffer, " ");
@@ -230,7 +230,7 @@ JANET_FN(jd_tm,
 		const struct jd_tm_key *ptr = jd_tm_keys;
 		while (ptr->key) {
 			if (janet_keyeq(e.key, ptr->key)) {
-				int *target  = (int*)((void*)out + ptr->off);
+				int *target  = (int*)((unsigned char*)out + ptr->off);
 
 				// exceptional values
 				if (!strcmp(ptr->key, "year")) {
