@@ -133,7 +133,11 @@ static void jd_tm_put(void *data, Janet key, Janet value) {
 		ptr++;
 	}
 
-	janet_panicf("tried to write to invalid field: %v", key);
+	// do not fail in case someone tries to write an invalid field
+	// people may want to write to gmtoff (for example) on a platform where that
+	// doesn't exist, and this should not conditionally fail on some platforms
+	// instead, silently do nothing
+	return;
 }
 
 #define MAX_INT_STRLEN 1024
