@@ -1,4 +1,10 @@
 #pragma once
+// compatibility flags
+
+// GNU-ish systems require this to expose tm_gmtoff and tm_zone
+// this is important because of how we detect their existence
+#define _GNU_SOURCE 1
+
 #include <janet.h>
 #include <time.h>
 #include "polyfill.h"
