@@ -52,7 +52,7 @@ time_t *jd_maketime(void) {
 
 JANET_FN(jd_gmtime,
 		"(gmtime (time))",
-		"") {
+		"Convert a date/time object into a date/tm object as UTC.") {
 	janet_fixarity(argc, 1);
 	time_t *time   = jd_gettime(argv, 0);
 	struct tm *tm  = gmtime(time);
@@ -63,7 +63,7 @@ JANET_FN(jd_gmtime,
 
 JANET_FN(jd_localtime,
 		"(localtime (time))",
-		"") {
+		"Convert a date/time object into a date/tm object as localtime.") {
 	janet_fixarity(argc, 1);
 	time_t *time   = jd_gettime(argv, 0);
 	struct tm *tm  = localtime(time);
@@ -74,7 +74,7 @@ JANET_FN(jd_localtime,
 
 JANET_FN(jd_time,
 		"(time)",
-		"") {
+		"Get the current moment in time as a date/time object.") {
 	(void) argv;
 	janet_fixarity(argc, 0);
 	time_t *out = jd_maketime();

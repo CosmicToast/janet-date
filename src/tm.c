@@ -7,6 +7,8 @@ static JanetMethod jd_tm_methods[] = {
 	// raw mktime, returning time_t
 	{"mktime",     jd_mktime},
 	{"mktime!",    jd_mktime_inplace},
+	{"timegm",     jd_timegm},
+	{"timegm!",    jd_timegm_inplace},
 	{"strftime",   jd_strftime},
 	{NULL, NULL},
 };
@@ -213,8 +215,8 @@ struct tm *jd_opttm(Janet *argv, int32_t argc, int32_t n) {
 }
 
 JANET_FN(jd_tm,
-		"",
-		"") {
+		"(tm {:sec 0 ...})",
+		"Construct a date/tm object from a compatible dictionary.") {
 	janet_fixarity(argc, 1);
 	JanetDictView view = janet_getdictionary(argv, 0);
 
@@ -257,8 +259,8 @@ JANET_FN(jd_tm,
 }
 
 JANET_FN(jd_mktime,
-		"",
-		"") {
+		"(mktime tm)",
+		"Convert a date/tm object as localtime to a normalized date/time object.") {
 	janet_fixarity(argc, 1);
 	struct tm *tm = jd_gettm(argv, 0);
 	struct tm *nw = jd_maketm();
@@ -269,8 +271,9 @@ JANET_FN(jd_mktime,
 }
 
 JANET_FN(jd_mktime_inplace,
-		"",
-		"") {
+		"(mktime! tm)",
+		"Convert a date/tm object as localtime to a normalized date/time object.\n"
+		"The date/tm object will be normalized in-place via mutation.") {
 	janet_fixarity(argc, 1);
 	struct tm *tm = jd_gettm(argv, 0);
 	time_t *time = jd_maketime();
@@ -279,8 +282,8 @@ JANET_FN(jd_mktime_inplace,
 }
 
 JANET_FN(jd_timegm,
-		"",
-		"") {
+		"(timegm tm)",
+		"Convert a date/tm object as UTC to a normalized date/time object.") {
 	janet_fixarity(argc, 1);
 	struct tm *tm = jd_gettm(argv, 0);
 	struct tm *nw = jd_maketm();
@@ -291,8 +294,9 @@ JANET_FN(jd_timegm,
 }
 
 JANET_FN(jd_timegm_inplace,
-		"",
-		"") {
+		"(timegm! tm)",
+		"Convert a date/tm object as UTC to a normalized date/time object.\n"
+		"The date/tm object will be normalized in-place via mutation.") {
 	janet_fixarity(argc, 1);
 	struct tm *tm = jd_gettm(argv, 0);
 	time_t *time = jd_maketime();
@@ -314,8 +318,11 @@ const static struct strftime_format strftime_formats[] = {
 	{NULL, NULL},
 };
 JANET_FN(jd_strftime,
-		"",
-		"") {
+		"(strftime tm \"%c\")\n"
+		"(strftime tm :iso8601)",
+		"Format a string from the date/tm object.\n"
+		"Has available preset formats.\n"
+		"Note that some platforms may potentially treat tm as localtime.") {
 	janet_fixarity(argc, 2);
 	// tm is first for pseudo-OO
 	struct tm *tm = jd_gettm(argv, 0);
