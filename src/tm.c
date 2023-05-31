@@ -278,6 +278,28 @@ JANET_FN(jd_mktime_inplace,
 	return janet_wrap_abstract(time);
 }
 
+JANET_FN(jd_timegm,
+		"",
+		"") {
+	janet_fixarity(argc, 1);
+	struct tm *tm = jd_gettm(argv, 0);
+	struct tm *nw = jd_maketm();
+	*nw = *tm;
+	time_t *time = jd_maketime();
+	*time = timegm(nw);
+	return janet_wrap_abstract(time);
+}
+
+JANET_FN(jd_timegm_inplace,
+		"",
+		"") {
+	janet_fixarity(argc, 1);
+	struct tm *tm = jd_gettm(argv, 0);
+	time_t *time = jd_maketime();
+	*time = timegm(tm);
+	return janet_wrap_abstract(time);
+}
+
 // strftime
 struct strftime_format {
 	const char *keyword;
@@ -322,6 +344,8 @@ const JanetRegExt jd_tm_cfuns[] = {
 	JANET_REG("tm",       jd_tm),
 	JANET_REG("mktime",   jd_mktime),
 	JANET_REG("mktime!",  jd_mktime_inplace),
+	JANET_REG("timegm",   jd_timegm),
+	JANET_REG("timegm!",  jd_timegm_inplace),
 	JANET_REG("strftime", jd_strftime),
 	JANET_REG_END
 };
