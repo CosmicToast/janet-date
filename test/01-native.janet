@@ -15,22 +15,30 @@
 # this means that put, update, keys, values, etc all work
 # let's make another `tm` object, but remove one second from it
 (def loc* (:localtime now))
+(def gmt* (:gmtime now))
 (update loc* :sec dec)
+(update gmt* :sec dec)
 
 # if the second count was at 0, it would now be at -1, which is out of range
 # that's not a problem though, you can actually already perform comparisons
 # WARN: you can ONLY compare `tm` objects of the same type (localtime vs gmtime)
 (assert (< loc* loc))
+(assert (< gmt* gmt))
 
-# :mktime, and :mktime! "renormalize" the object
-# :mktime returns a `time` object
-# :mktime! does that, and normalizes the `tm` object in place by mutating it
+# :mktime[!] and :timegm[!] "renormalize" the object
+# :mktime and :timegm return a `time` object
+# :mktime! and :timegm! do that, and normalizes the `tm` object in place by mutating it
 (assert (= (:mktime loc)  now))
 (assert (< (:mktime loc*) now))
+(assert (= (:timegm gmt)  now))
+(assert (< (:timegm gmt*) now))
 
-# you must not call :mktime or :mktime! on the output of a :gmtime
+# you must not call :mktime or :mktime! on the output of a :gmtime and vice versa
 # the data *will* be wrong, as mktime (as per the spec) presumes :localtime
 (assert (not= (:mktime gmt) now))
+(assert (not= (:timegm loc) now))
+(assert (= (:mktime loc) now))
+(assert (= (:timegm gmt) now))
 
 # as such, the correct approach is to keep things in `time` format as much as
 # possible, only converting to :localtime or :gmtime for mutation and formatting
@@ -49,15 +57,15 @@
                :mon month
                :year year}]
   (assert (= (type time) :date/time))
-  (let [l (:localtime time)
-        p (partial put-date l)]
+  (let [g (:gmtime time)
+        p (partial put-date g)]
     (p :sec seconds)
     (p :min minutes)
     (p :hour hours)
     (p :mday month-day)
     (p :mon month)
     (p :year year)
-    (:mktime! l))) # mktime! is slightly more efficient and we're going to GC l anyway
+    (:timegm! g))) # timegm! is slightly more efficient and we're going to GC l anyway
 
 # all supported keys can be given a function
 (assert (< now (update-time now :sec inc)))

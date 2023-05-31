@@ -6,12 +6,12 @@
   (native/time))
 
 (defn time?
-  `Check if x is a datetime object.`
+  `Check if x is a date/time object.`
   [x]
   (= :date/time (type x)))
 
 (defn tm?
-  `Check if x is a datetm object.`
+  `Check if x is a date/tm object.`
   [x]
   (= :date/tm (type x)))
 
@@ -36,23 +36,23 @@
 
 (defn update-time!
   ```
-  Update a given datetime object as a whole.
+  Update a given date/time object as a whole.
 
   If nil is passed as time, the function will call (date/time) for you.
 
-  This version will give you the corresponding localtime datetm object to mutate
+  This version will give you the corresponding timegm date/tm object to mutate
   as you see fit. This is dangerous and not perfectly portable.
   Use at your own peril.
 
   Don't forget to return the resulting object, as it will be normalized and
-  transformed back into a datetime object for you.
+  transformed back into a date/time object for you.
   ```
   [time fun]
   (default time (native/time))
   (assert (time? time))
   (assert (callable? fun))
-  (def newtm (fun (:localtime time)))
-  (:mktime newtm)) # mktime! is slightly more efficient and we're discarding it
+  (def newtm (fun (:gmtime time)))
+  (:timegm! newtm)) # timegm! is slightly more efficient and we're discarding it
 
 (defn update-time*
   `Variant of update-time that takes a dictionary.`
@@ -64,7 +64,7 @@
 
 (defn update-time
   ```
-  Update a given datetime object.
+  Update a given date/time object.
 
   This takes a value for seconds, minutes, hours, day-of-month, month, and year.
 
@@ -74,14 +74,13 @@
   range, as they will be normalized.
 
   It will automatically re-determine if DST is applicable and give you back a
-  modified datetime object.
-  If you need additional control over the underlying localtime tm call, use
+  modified date/time object.
+  If you need additional control over the underlying gmtime tm call, use
   `update-time*` or `update-time!`.
 
   You can pass `nil` as `time`, in which case the current time will be used.
-  Combined with specifying all the fields allows you to construct datetime
-  objects in localtime. Constructing UTC datetime objects is non-trivial when
-  limited to what is provided by ISO C99.
+  Combined with specifying all the fields allows you to construct date/time
+  objects in UTC.
   ```
   [time &keys {:sec  second
                :min  minute
