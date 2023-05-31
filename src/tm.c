@@ -221,7 +221,7 @@ JANET_FN(jd_tm,
 	struct tm *out = jd_maketm();
 	memset(out, 0, sizeof(struct tm));
 #ifdef TM_GMTOFF
-	out->tm_gmtoff = 0;
+	out->TM_GMTOFF = 0;
 #endif
 
 	for (int32_t i = 0; i < view.cap; i++) {
