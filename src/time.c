@@ -82,9 +82,12 @@ JANET_FN(jd_time,
 	return janet_wrap_abstract(out);
 }
 
-const JanetRegExt jd_time_cfuns[] = {
-	JANET_REG("gmtime",     jd_gmtime),
-	JANET_REG("localtime",  jd_localtime),
-	JANET_REG("time",       jd_time),
-	JANET_REG_END
-};
+void jd_time_register(JanetTable *env, const char *regprefix) {
+	const JanetRegExt cfuns[] = {
+		JANET_REG("gmtime",     jd_gmtime),
+		JANET_REG("localtime",  jd_localtime),
+		JANET_REG("time",       jd_time),
+		JANET_REG_END
+	};
+	janet_cfuns_ext(env, regprefix, cfuns);
+}

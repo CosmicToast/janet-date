@@ -340,12 +340,15 @@ JANET_FN(jd_strftime,
 	return janet_wrap_buffer(strftime_buffer(format, tm, NULL));
 }
 
-const JanetRegExt jd_tm_cfuns[] = {
-	JANET_REG("tm",       jd_tm),
-	JANET_REG("mktime",   jd_mktime),
-	JANET_REG("mktime!",  jd_mktime_inplace),
-	JANET_REG("timegm",   jd_timegm),
-	JANET_REG("timegm!",  jd_timegm_inplace),
-	JANET_REG("strftime", jd_strftime),
-	JANET_REG_END
-};
+void jd_tm_register(JanetTable *env, const char *regprefix) {
+	const JanetRegExt cfuns[] = {
+		JANET_REG("tm",       jd_tm),
+		JANET_REG("mktime",   jd_mktime),
+		JANET_REG("mktime!",  jd_mktime_inplace),
+		JANET_REG("timegm",   jd_timegm),
+		JANET_REG("timegm!",  jd_timegm_inplace),
+		JANET_REG("strftime", jd_strftime),
+		JANET_REG_END
+	};
+	janet_cfuns_ext(env, regprefix, cfuns);
+}
