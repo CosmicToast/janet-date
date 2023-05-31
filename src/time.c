@@ -24,9 +24,9 @@ static int jd_time_get(void *p, Janet key, Janet *out) {
 }
 
 // time_t is always a UTC-representation
-// we hard-code the offset because of a macOS bug
 static void jd_time_tostring(void *p, JanetBuffer *buffer) {
-	strftime_buffer("%F %T.000 +0000", gmtime(p), buffer);
+	// print ISO 8601
+	strftime_buffer("%F %T%z", gmtime(p), buffer);
 }
 
 static const JanetAbstractType jd_time_t = {
