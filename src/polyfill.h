@@ -21,6 +21,12 @@ const char *janet_optcbytes(const Janet *argv, int32_t argc, int32_t n, const ch
 #endif // !defined(JANET_NO_SOURCEMAPS)
 #endif // JANET_VERSION_MAJOR < 2 && JANET_VERSION_MINOR < 28
 
+// JANET_REG is broken on windows, so make it JANET_REG_ (no S no D)
+#ifdef _MSC_VER
+#undef JANET_REG
+#define JANET_REG JANET_REG_
+#endif
+
 // timegm
 #ifdef _MSC_VER
 #define timegm _mkgmtime
