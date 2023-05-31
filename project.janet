@@ -8,6 +8,11 @@
 (declare-source
   :source ["date"])
 
+(def tz-source ["tz/localtime.c"
+                "tz/asctime.c"
+                "tz/difftime.c"
+                "tz/strftime.c"])
+
 (declare-native
   :name "date/native"
   :source ["src/main.c"
@@ -16,7 +21,4 @@
            "src/tm.c"
            "src/util.c"
 
-           "tz/localtime.c"
-           "tz/asctime.c"
-           "tz/difftime.c"
-           "tz/strftime.c"])
+           ;(if (= :windows (os/which)) [] tz-source)])
