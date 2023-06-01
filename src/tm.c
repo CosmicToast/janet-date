@@ -310,11 +310,34 @@ struct strftime_format {
 	const char *format;
 };
 const static struct strftime_format strftime_formats[] = {
-	// ISO 8601 allows for a lot
-	// we represent it as YYYY-MM-DD hh:mm:ss[+/- offset]
-	// the main unfortunate bit is the use of +/-0000 over Z
-	{"iso8601", "%F %T%z"},
-	{"default", "%c"}, // system/locale format
+	/* :iso8601 based on ISO 8601:2004(E)
+	 * Inaccuracies:
+	 * * we mix extended and basic formats (latter for offset)
+	 * Non-compliance:
+	 * * when the timezone is exactly UTC, we may not use "Z" for the offset
+	 */
+	{"iso8601", "%FT%T%z"},
+	/* :rfc3339 based on RFC 3339
+	 * Non-compliance:
+	 * * when the timezone is exactly UTC, we may not use "Z" for the offset
+	 * * the UTC offset may not contain a ":"
+	 */
+	{"rfc3339", "%F %T%z"},
+	/* :html based on Dates and Times Microsyntaxes of WHATWG
+	 * This impementation is fully compliant.
+	 */
+	{"html", "%F %T%z"},
+	/* :email, :rfc5321, :rfc5322, :internet based on RFC 5322 #3.3
+	 * This implementation is fully compliant.
+	 * Note that according to the spec, these should be used against localtime.
+	 * Additionally, note that the below are locale-dependent.
+	 */
+	{"email",    "%a, %d %b %Y %H:%M:%S %z"},
+	{"rfc5321",  "%a, %d %b %Y %H:%M:%S %z"},
+	{"rfc5322",  "%a, %d %b %Y %H:%M:%S %z"},
+	{"internet", "%a, %d %b %Y %H:%M:%S %z"},
+	// system/locale default format
+	{"default", "%c"},
 	{NULL, NULL},
 };
 JANET_FN(jd_strftime,
