@@ -94,3 +94,31 @@
                       :year  year
                       # UTC only
                       :isdst false}))
+
+(defn- format-fn
+  [time fmt f]
+  (def tm (f time))
+  (assert (tm? tm))
+  (:strftime tm fmt))
+
+(defn format
+  ```
+  Format a given `date/time` object according to the format.
+  If `utc?` is truthy, interpret it as UTC, else as your local timezone.
+  Format may either be a strftime-compatible string, or a preset keyword.
+  The following presets are available:
+  * :iso8601 (along with its -calendar, -ordinal, and -week variants)
+  * :rfc3339
+  * :html
+  * :rfc5322 (and its aliases: :email, :rfc5321, :internet)
+  * :default
+
+  Note that the iso8601 and rc3339 implementations are not perfectly compliant.
+  For details, see `src/tm.c#strftime_formats[]`.
+  ```
+  [time &opt fmt utc?]
+  (format-fn time
+             (or fmt :default)
+             (if utc?
+               native/gmtime
+               native/localtime)))
