@@ -325,9 +325,11 @@ const static struct strftime_format strftime_formats[] = {
 	// same as -calendar but extended format (except for %z)
 	{"iso8601",          "%FT%T%z"},
 	/* :rfc3339 based on RFC 3339
-	 * Non-compliance:
-	 * * when the timezone is exactly UTC, we may not use "Z" for the offset
-	 * * the UTC offset may not contain a ":"
+	 * RFC 3339 is essentially an ISO 8601 profile with clarifications.
+	 * As such, the non-compliance we have against ISO 8601 applies here.
+	 *
+	 * Additionally, RFC 3339 requires that the UTC offset contain a ":",
+	 * (i.e the extended format is required) so we are also non-compliant there.
 	 */
 	{"rfc3339", "%F %T%z"},
 	/* :html based on Dates and Times Microsyntaxes of WHATWG
@@ -335,6 +337,7 @@ const static struct strftime_format strftime_formats[] = {
 	 */
 	{"html", "%F %T%z"},
 	/* :email, :rfc5321, :rfc5322, :internet based on RFC 5322 #3.3
+	 * They are all identical.
 	 * This implementation is fully compliant.
 	 * Note that according to the spec, these should be used against localtime.
 	 * Additionally, note that the below are locale-dependent.
