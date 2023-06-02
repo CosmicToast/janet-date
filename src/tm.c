@@ -310,13 +310,20 @@ struct strftime_format {
 	const char *format;
 };
 const static struct strftime_format strftime_formats[] = {
-	/* :iso8601 based on ISO 8601:2004(E)
-	 * Inaccuracies:
-	 * * we mix extended and basic formats (latter for offset)
-	 * Non-compliance:
-	 * * when the timezone is exactly UTC, we may not use "Z" for the offset
+	/* :iso8601* based on ISO 8601:2004(E)
+	 * All in basic format except unqualified :iso8601 which is in extended
+	 * format (minus %z). The specification does not specify if mixing extended
+	 * and basic formats is allowed, so we interpret it to be valid.
+	 *
+	 * We treat all inputs as local time with difference from UTC, since we have
+	 * no easy way of knowing. This is technically non-compliant, but I think it
+	 * can be forgiven, since we are otherwise compliant to 4.2.5.2 (basic).
 	 */
-	{"iso8601", "%FT%T%z"},
+	{"iso8601-calendar", "%Y%m%dT%H%M%S%z"},  // calendar date
+	{"iso8601-ordinal",  "%Y%jT%H%M%S%z"},    // ordinal date: day-of-year
+	{"iso8601-week",     "%YW%U%wT%H%M%S%z"}, // week date: week-of-year, weekday
+	// same as -calendar but extended format (except for %z)
+	{"iso8601",          "%FT%T%z"},
 	/* :rfc3339 based on RFC 3339
 	 * Non-compliance:
 	 * * when the timezone is exactly UTC, we may not use "Z" for the offset
