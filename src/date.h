@@ -1,13 +1,10 @@
 #pragma once
-// compatibility flags
+#include "compat.h"
+#include "polyfill.h"
 
-// GNU-ish systems require this to expose tm_gmtoff and tm_zone
-// this is important because of how we detect their existence
-#define _GNU_SOURCE 1
-
+// technically included above, here for posterity
 #include <janet.h>
 #include <time.h>
-#include "polyfill.h"
 
 // util.c
 JanetBuffer *strftime_buffer(const char *format, const struct tm *tm, JanetBuffer *buffer);
