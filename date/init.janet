@@ -55,7 +55,7 @@
   (:timegm! newtm)) # timegm! is slightly more efficient and we're discarding it
 
 (defn update-time*
-  `Variant of update-time that takes a dictionary.`
+  `Variant of update-time that takes a dictionary without normalizing it.`
   [time ds]
   (assert (dictionary? ds))
   (update-time! time (fn [tm]
@@ -73,8 +73,6 @@
   it will be used as-is. Note that the resulting values need not be in any given
   range, as they will be normalized.
 
-  It will automatically re-determine if DST is applicable and give you back a
-  modified date/time object.
   If you need additional control over the underlying gmtime tm call, use
   `update-time*` or `update-time!`.
 
@@ -94,4 +92,5 @@
                       :mday  month-day
                       :mon   month
                       :year  year
-                      :isdst :detect}))
+                      # UTC only
+                      :isdst false}))
