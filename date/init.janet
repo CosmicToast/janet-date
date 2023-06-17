@@ -1,14 +1,29 @@
 (import date/native)
 
-(defn time
-  `Return an opaque datetime representation of the current moment.`
-  []
-  (native/time))
+(def time
+  `Return an opaque date/time representation of the current moment.`
+  native/time)
 
 (defn time?
   `Check if x is a date/time object.`
   [x]
   (= :date/time (type x)))
+
+(defn- tm
+  [f &opt o]
+  (def out (native/tm o))
+  (f out)
+  out)
+
+(def utc
+  `Generate a date/tm object from a compatible dictionary. Implying UTC.
+  Non-specified fields will be initialized to their default values (usually zero).`
+  (partial tm native/timegm!))
+
+(def local
+  `Generate a date/tm object from a compatible dictionary. Implying localtime.
+  Non-specified fields will be initialized to their default values (usually zero).`
+  (partial tm native/mktime!))
 
 (defn tm?
   `Check if x is a date/tm object.`

@@ -215,15 +215,18 @@ struct tm *jd_opttm(Janet *argv, int32_t argc, int32_t n) {
 
 JANET_FN(jd_tm,
 		"(tm {:sec 0 ...})",
-		"Construct a date/tm object from a compatible dictionary.") {
-	janet_fixarity(argc, 1);
-	JanetDictView view = janet_getdictionary(argv, 0);
+		"Construct a date/tm object from a compatible dictionary.\n"
+		"Note that you *must* immediate pass this into timegm or mktime.") {
+	janet_arity(argc, 0, 1);
 
 	struct tm *out = jd_maketm();
+	// default values
 	memset(out, 0, sizeof(struct tm));
-#ifdef TM_GMTOFF
-	out->TM_GMTOFF = 0;
-#endif
+	out->tm_mday = 1; // range is 1-31
+
+	if (argc == 0 || janet_checktype(argv[0], JANET_NIL)) return janet_wrap_abstract(out);
+
+	JanetDictView view = janet_getdictionary(argv, 0);
 
 	for (int32_t i = 0; i < view.cap; i++) {
 		const JanetKV e = view.kvs[i];

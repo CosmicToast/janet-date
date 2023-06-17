@@ -22,10 +22,14 @@ static int jd_time_get(void *p, Janet key, Janet *out) {
 	return janet_getmethod(janet_unwrap_keyword(key), jd_time_methods, out);
 }
 
-// time_t is always a UTC-representation
+// time_t is an arithmetic type, which means some width of int or float
+// instead of trying to guess the type,
+// we give the number of seconds from the zero-value of time_t
+// on UNIX platforms, this is the number of seconds since UNIX epoch (1970)
+// ultimately, the user knows what platform they're on, making the output useful
 static void jd_time_tostring(void *p, JanetBuffer *buffer) {
-	// print ISO 8601
-	strftime_buffer("%F %T%z", gmtime(p), buffer);
+	double dt = difftime(*(time_t*)p, 0);
+	janet_formatb(buffer, "%f", dt);
 }
 
 static const JanetAbstractType jd_time_t = {

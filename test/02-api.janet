@@ -19,3 +19,11 @@
 (assert (date/format now :default true))
 # format string
 (assert (date/format now :%c))
+
+# ensure tm + gmtime are spec-compliant
+(def u (date/utc   {:year 1970}))
+(def l (date/local {:year 1970}))
+(assert (= u
+           (:gmtime (:timegm u))))
+(assert (= l
+           (:localtime (:mktime l))))
