@@ -3,7 +3,8 @@
   :description "C99 date library for Janet"
   :author "Chloe Kudryavtsev <toast@bunkerlabs.net>"
   :license "Unlicense"
-  :repo "https://github.com/CosmicToast/janet-date.git")
+  :repo "https://github.com/CosmicToast/janet-date.git"
+  :url  "https://github.com/CosmicToast/janet-date.git")
 
 (declare-source
   :source ["date"])
