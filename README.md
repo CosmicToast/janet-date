@@ -15,7 +15,7 @@ You can add it to your `project.janet` dependency list like so:
   :name "my-project"
   :dependencies
   [{:repo "https://github.com/cosmictoast/janet-date.git"
-    :tag "v1.0.0"}]
+    :tag "v1.0.1"}]
   # ...
 ```
 
