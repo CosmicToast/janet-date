@@ -41,10 +41,11 @@
        (map fun)
        from-pairs))
 
+(def- some? (complement nil?))
 (defn- put-date
   [ds key val]
   (assert (tm? ds))
-  (assert val)
+  (assert (some? val))
   (if (callable? val)
     (update ds key val)
     (put    ds key val)))
