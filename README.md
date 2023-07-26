@@ -83,7 +83,7 @@ for native API, please see the test suite and `src/` directory.
 (put calendar-now-utc :sec 120) # out of range
 (:timegm! calendar-now-utc)
 # now in range
-(assert > (:timegm calendar-now-utc) now)
+(assert (> (:timegm calendar-now-utc) now))
 
 # however, it is recommended to work with date/time objects
 # you can mutate those using the update-time function suite
